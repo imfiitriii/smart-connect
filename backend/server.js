@@ -14,7 +14,9 @@ const upload = multer({ storage: multer.memoryStorage() });
 const app = express();
 const port = process.env.PORT || 3000; //for gcloud deployment
 
-app.use(cors());
+app.use(cors({
+    origin: "*"
+}));
 app.use(express.json());
 
 // --- Health check ---
