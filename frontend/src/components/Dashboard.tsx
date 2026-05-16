@@ -72,8 +72,8 @@ function toRelStatus(apiStatus: string): RelStatus {
 }
 
 const statusConfig: Record<RelStatus, { label: string; color: string; bg: string; icon: React.ElementType }> = {
-  approved: { label: 'Approved · High Score', color: C.green,  bg: 'rgba(222,255,154,0.08)', icon: CheckCircle2   },
-  pending:  { label: 'Pending Mentor',         color: C.blue,   bg: 'rgba(59,130,246,0.08)',  icon: Clock          },
+  approved: { label: 'Found Mentor - Pending Approval', color: C.green,  bg: 'rgba(222,255,154,0.08)', icon: CheckCircle2   },
+  pending:  { label: 'Admin Action Required',         color: C.yellow, bg: 'rgba(250,204,21,0.08)',  icon: AlertTriangle  },
   action:   { label: 'Admin Action Required',  color: C.yellow, bg: 'rgba(250,204,21,0.08)',  icon: AlertTriangle  },
 };
 
@@ -274,9 +274,9 @@ export default function Dashboard() {
                     initial={{ opacity: 0, x: -12 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.18 }}>
-          <Card className="p-6 h-full">
+          <Card className="p-6 h-full flex flex-col">
             {/* header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 shrink-0">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.22em]"
                    style={{ color: C.muted }}>
@@ -291,7 +291,7 @@ export default function Dashboard() {
             </div>
 
             {/* list */}
-            <div className="space-y-3">
+            <div className="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar" style={{ maxHeight: '450px' }}>
               {loading && (
                 <p className="text-sm text-center py-6" style={{ color: C.muted }}>Loading…</p>
               )}
@@ -366,8 +366,8 @@ export default function Dashboard() {
             </div>
 
             {/* legend */}
-            <div className="mt-6 pt-5 border-t space-y-2" style={{ borderColor: C.border }}>
-              {(Object.entries(statusConfig) as [RelStatus, typeof statusConfig[RelStatus]][]).map(([, cfg]) => (
+            <div className="mt-6 pt-5 border-t space-y-2 shrink-0" style={{ borderColor: C.border }}>
+              {[statusConfig.approved, statusConfig.pending].map((cfg) => (
                 <div key={cfg.label} className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full shrink-0" style={{ background: cfg.color }} />
                   <span className="text-[10px] font-semibold" style={{ color: C.muted }}>{cfg.label}</span>
@@ -378,14 +378,14 @@ export default function Dashboard() {
         </motion.div>
 
         {/* ── Right: Chart + AI Summary (60%) ── */}
-        <motion.div className="lg:col-span-3 space-y-4"
+        <motion.div className="lg:col-span-3 h-full"
                     initial={{ opacity: 0, x: 12 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.22 }}>
 
           {/* Bar chart card */}
-          <Card className="p-7">
-            <div className="flex items-center justify-between mb-7">
+          <Card className="p-7 h-full flex flex-col">
+            <div className="flex items-center justify-between mb-7 shrink-0">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.22em]"
                    style={{ color: C.muted }}>
@@ -402,7 +402,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="h-52">
+            <div className="flex-1 min-h-0">
               {chartData && chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} barCategoryGap="38%"
@@ -456,7 +456,7 @@ export default function Dashboard() {
             </div>
 
             {/* chart legend */}
-            <div className="flex items-center gap-6 mt-5 pt-5 border-t"
+            <div className="flex items-center gap-6 mt-5 pt-5 border-t shrink-0"
                  style={{ borderColor: C.border }}>
               {[
                 { color: C.green,   label: 'High ≥70%' },
@@ -472,48 +472,7 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          {/* AI Summary card */}
-          <Card className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                   style={{ background: 'rgba(22,163,74,0.10)', border: `1px solid ${C.green}25` }}>
-                <Sparkles size={15} style={{ color: C.green }} />
-              </div>
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.25em]"
-                   style={{ color: C.muted }}>
-                  Powered by AI Reasoner
-                </p>
-                <h4 className="text-sm font-black leading-none mt-0.5" style={{ color: '#111827' }}>AI Summary</h4>
-              </div>
-            </div>
 
-            <div className="rounded-xl px-5 py-4 border-l-2 text-sm leading-relaxed font-medium"
-                 style={{ background: 'rgba(22,163,74,0.06)', borderLeftColor: C.green, color: '#374151' }}>
-              <span style={{ color: C.green }} className="font-black">Toy G7</span> shows excellent success
-              rate with score of{' '}
-              <span style={{ color: C.green }} className="font-black">89%</span>. This indicates{' '}
-              <span style={{ color: C.blue }} className="font-black">Enzo</span> is an excellent candidate
-              for this startup.
-            </div>
-
-            {/* confidence bar */}
-            <div className="mt-4 space-y-1.5">
-              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest"
-                   style={{ color: C.muted }}>
-                <span>AI Confidence</span>
-                <span style={{ color: C.green }}>92%</span>
-              </div>
-              <div className="h-1.5 w-full rounded-full overflow-hidden"
-                   style={{ background: '#e5e7eb' }}>
-                <motion.div className="h-full rounded-full"
-                             initial={{ width: 0 }}
-                             animate={{ width: '92%' }}
-                             transition={{ duration: 1.2, ease: 'easeOut', delay: 0.4 }}
-                             style={{ background: `linear-gradient(90deg, ${C.green} 0%, #a8e063 100%)` }} />
-              </div>
-            </div>
-          </Card>
 
         </motion.div>
       </div>

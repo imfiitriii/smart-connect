@@ -77,12 +77,12 @@ export default function App() {
         // 1. Extract text from PDF
         const formData = new FormData()
         formData.append('pdf', form.pitchDeck)
-        
+
         const extractRes = await fetch('http://localhost:3000/extract', {
           method: 'POST',
           body: formData,
         })
-        
+
         if (!extractRes.ok) {
           const err = await extractRes.json()
           throw new Error(err.error || 'Failed to extract text from PDF')
@@ -100,9 +100,9 @@ export default function App() {
           const err = await llmRes.json()
           throw new Error(err.error || 'Failed to analyze pitch deck')
         }
-        
+
         const profile = await llmRes.json()
-        
+
         // Merge extracted profile with user form inputs (user inputs override)
         startupPayload = {
           ...profile,
@@ -191,7 +191,7 @@ export default function App() {
               <path d="M13 10V3L4 14h7v7l9-11h-7z" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <h1 className="form-title">Register Your Startup</h1>
+          <h1 className="form-title">SMARTCONNECT : Startup Onboarding</h1>
           <p className="form-subtitle">
             Tell us about your startup and we'll match you with the perfect mentor using AI.
           </p>
