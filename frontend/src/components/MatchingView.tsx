@@ -69,9 +69,9 @@ export default function MatchingView() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`${API}mentors`).then(r => { if (!r.ok) throw new Error(`Mentors: ${r.status}`); return r.json(); }),
-      fetch(`${API}relationships`).then(r => { if (!r.ok) throw new Error(`Relationships: ${r.status}`); return r.json(); }),
-      fetch(`${API}startups`).then(r => { if (!r.ok) throw new Error(`Startups: ${r.status}`); return r.json(); }),
+      fetch(`${API}/mentors`).then(r => { if (!r.ok) throw new Error(`Mentors: ${r.status}`); return r.json(); }),
+      fetch(`${API}/relationships`).then(r => { if (!r.ok) throw new Error(`Relationships: ${r.status}`); return r.json(); }),
+      fetch(`${API}/startups`).then(r => { if (!r.ok) throw new Error(`Startups: ${r.status}`); return r.json(); }),
     ])
       .then(([mentorData, relData, sData]: [ApiMentor[], ApiRelationship[], ApiStartup[]]) => {
         setMentors(mentorData);
