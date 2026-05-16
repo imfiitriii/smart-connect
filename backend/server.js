@@ -12,7 +12,7 @@ const pdfParse = require('pdf-parse');
 const upload = multer({ storage: multer.memoryStorage() });
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000; //for gcloud deployment
 
 app.use(cors());
 app.use(express.json());
