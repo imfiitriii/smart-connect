@@ -58,20 +58,20 @@ function scoreColor(score: number) {
 
 // ── MatchingView ──────────────────────────────────────────────────────────────
 export default function MatchingView() {
-  const [mentors, setMentors]               = useState<ApiMentor[]>([]);
-  const [relationships, setRelationships]   = useState<ApiRelationship[]>([]);
-  const [startupData, setStartupData]       = useState<ApiStartup[]>([]);
-  const [loading, setLoading]               = useState(true);
-  const [error, setError]                   = useState<string | null>(null);
+  const [mentors, setMentors] = useState<ApiMentor[]>([]);
+  const [relationships, setRelationships] = useState<ApiRelationship[]>([]);
+  const [startupData, setStartupData] = useState<ApiStartup[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedMentor, setSelectedMentor] = useState<ApiMentor | null>(null);
   const [selectedStartup, setSelectedStartup] = useState<MatchedStartup | null>(null);
-  const [isMatching, setIsMatching]         = useState(false);
+  const [isMatching, setIsMatching] = useState(false);
 
   useEffect(() => {
     Promise.all([
-      fetch(`${API}/mentors`).then(r => { if (!r.ok) throw new Error(`Mentors: ${r.status}`); return r.json(); }),
-      fetch(`${API}/relationships`).then(r => { if (!r.ok) throw new Error(`Relationships: ${r.status}`); return r.json(); }),
-      fetch(`${API}/startups`).then(r => { if (!r.ok) throw new Error(`Startups: ${r.status}`); return r.json(); }),
+      fetch(`${API}mentors`).then(r => { if (!r.ok) throw new Error(`Mentors: ${r.status}`); return r.json(); }),
+      fetch(`${API}relationships`).then(r => { if (!r.ok) throw new Error(`Relationships: ${r.status}`); return r.json(); }),
+      fetch(`${API}startups`).then(r => { if (!r.ok) throw new Error(`Startups: ${r.status}`); return r.json(); }),
     ])
       .then(([mentorData, relData, sData]: [ApiMentor[], ApiRelationship[], ApiStartup[]]) => {
         setMentors(mentorData);
@@ -132,7 +132,7 @@ export default function MatchingView() {
 
           <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
             {loading && <p className="text-sm text-gray-400 text-center py-8">Loading mentors…</p>}
-            {error   && <p className="text-sm text-amber-500 text-center py-8">Failed to load: {error}</p>}
+            {error && <p className="text-sm text-amber-500 text-center py-8">Failed to load: {error}</p>}
             {!loading && !error && mentors.map(m => {
               const matched = getMatchedStartups(m.id);
               return (
@@ -443,10 +443,10 @@ function StartupMatchCard({
 function Rocket({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
-      <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
-      <path d="M9 12H4s.55-3.03 2-5c1.62-2.2 5-3 5-3"/>
-      <path d="M12 15v5s3.03-.55 5-2c2.2-1.62 3-5 3-5"/>
+      <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+      <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+      <path d="M9 12H4s.55-3.03 2-5c1.62-2.2 5-3 5-3" />
+      <path d="M12 15v5s3.03-.55 5-2c2.2-1.62 3-5 3-5" />
     </svg>
   );
 }
