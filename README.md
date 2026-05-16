@@ -1,6 +1,6 @@
 
 
-#  Smart Connect : AI Powered Mentor-Startup Relationship Management System
+#  SmartConnect : AI Powered Mentor-Startup Relationship Management System
 
 An AI-powered innovation ecosystem platform that automates relationships between startups and mentors using intelligent matching and structured ecosystem data.
 
