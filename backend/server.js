@@ -5,6 +5,11 @@ const cors = require('cors');
 const { collection, addDoc, getDocs, Timestamp, doc, updateDoc, arrayUnion } = require("firebase/firestore");
 const { db } = require('./firebase');
 const llmCall = require('./llm-object');
+const llmExtract = require('./llm-extract');
+const multer = require('multer');
+const pdfParse = require('pdf-parse');
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 const app = express();
 const port = 3000;
@@ -14,6 +19,87 @@ app.use(express.json());
 
 // --- Health check ---
 app.get('/', (req, res) => res.send("hello world"));
+
+// --- POST /extract : convert PDF to text ---
+app.post('/extract', upload.single('pdf'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "No PDF file uploaded." });
+        }
+        const data = await pdfParse(req.file.buffer);
+        res.json({ text: data.text });
+    } catch (err) {
+        console.error("❌ /extract error:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- POST /llmextract : convert text to JSON profile via Gemini ---
+app.post('/llmextract', async (req, res) => {
+    try {
+        const { text } = req.body;
+        if (!text) {
+            return res.status(400).json({ error: "No text provided." });
+        }
+
+        const prompt = `
+Role:
+You are an Expert Startup Analyst AI working for an innovation ecosystem platform.
+
+Pitch deck text :
+${text}
+
+Task:
+Analyze the provided pitch deck text convert it into a structured JSON profile that can be used for mentor matching and ecosystem relationship management.
+You must extract only relevant information and ignore marketing language or irrelevant content.
+---
+Output Requirements:
+Return ONLY a valid JSON object. Do NOT include explanations, markdown, or extra text.
+---
+JSON FORMAT (STRICT):
+{
+  "name": "string (startup name if found, else infer or set 'Unknown')",
+  "industry": "string (main industry category)",
+  "stage": "string (idea | pre-seed | seed | growth | unknown)",
+  "problemStatement": "string (clear 1–2 sentence description of the problem)",
+  "solution": "string (what the startup builds)",
+  "keyNeeds": ["string", "string"],
+  "keywords": ["string", "string", "string"],
+  "targetUsers": ["string"],
+  "businessModel": "string",
+  "aiConfidence": number (0-100 confidence score of extraction accuracy)
+}
+---
+Rules:
+- If information is missing, infer logically from context.
+- Do NOT hallucinate specific facts like funding numbers or names.
+- Keep problemStatement concise and meaningful.
+- keywords must be 3–6 high-signal terms.
+- keyNeeds must be ecosystem-related (e.g., mentorship, funding, partnerships, technical guidance).
+- Output MUST be valid JSON.
+        `.trim();
+
+        const rawResult = await llmExtract(process.env.GOOGLE_API_KEY, prompt);
+        console.log("🤖 Gemini extraction raw response:", rawResult);
+
+        // Parse Gemini JSON response
+        let profile;
+        try {
+            const cleaned = rawResult.replace(/```json|```/g, '').trim();
+            profile = JSON.parse(cleaned);
+        } catch (parseErr) {
+            return res.status(500).json({
+                error: "Failed to parse Gemini response as JSON.",
+                raw: rawResult
+            });
+        }
+
+        res.json(profile);
+    } catch (err) {
+        console.error("❌ /llmextract error:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 // --- Old test route ---
 app.get('/llm', async (req, res) => {

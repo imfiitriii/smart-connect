@@ -31,11 +31,9 @@ export default function App() {
     if (!file) return
     const allowed = [
       'application/pdf',
-      'application/vnd.ms-powerpoint',
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     ]
     if (!allowed.includes(file.type)) {
-      setError('Please upload a PDF or PowerPoint file.')
+      setError('Please upload a PDF file.')
       return
     }
     if (file.size > 20 * 1024 * 1024) {
@@ -70,15 +68,53 @@ export default function App() {
 
     setSubmitting(true)
     try {
-      const payload = {
+      let startupPayload = {
         name: form.name.trim(),
         industry: form.industry,
       }
 
+      if (form.pitchDeck) {
+        // 1. Extract text from PDF
+        const formData = new FormData()
+        formData.append('pdf', form.pitchDeck)
+        
+        const extractRes = await fetch('http://localhost:3000/extract', {
+          method: 'POST',
+          body: formData,
+        })
+        
+        if (!extractRes.ok) {
+          const err = await extractRes.json()
+          throw new Error(err.error || 'Failed to extract text from PDF')
+        }
+        const { text } = await extractRes.json()
+
+        // 2. Send text to LLM to get structured profile
+        const llmRes = await fetch('http://localhost:3000/llmextract', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text }),
+        })
+
+        if (!llmRes.ok) {
+          const err = await llmRes.json()
+          throw new Error(err.error || 'Failed to analyze pitch deck')
+        }
+        
+        const profile = await llmRes.json()
+        
+        // Merge extracted profile with user form inputs (user inputs override)
+        startupPayload = {
+          ...profile,
+          ...startupPayload,
+        }
+      }
+
+      // 3. Submit to /startups for matching
       const res = await fetch('http://localhost:3000/startups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(startupPayload),
       })
 
       if (!res.ok) {
@@ -238,7 +274,7 @@ export default function App() {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept=".pdf,.ppt,.pptx"
+                    accept=".pdf"
                     style={{ display: 'none' }}
                     onChange={(e) => handleFile(e.target.files[0])}
                   />
@@ -250,7 +286,7 @@ export default function App() {
                     </svg>
                   </div>
                   <p className="drop-primary">Drop your pitch deck here</p>
-                  <p className="drop-secondary">or <span className="drop-link">browse files</span> — PDF or PPTX, max 20 MB</p>
+                  <p className="drop-secondary">or <span className="drop-link">browse files</span> — PDF only, max 20 MB</p>
                 </div>
               )}
             </div>
