@@ -115,10 +115,10 @@ export default function MatchingView() {
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-280px)]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-160px)]">
 
         {/* ── Mentor Selector ── */}
-        <div className="lg:col-span-4 bg-white rounded-3xl border border-green-200 p-6 flex flex-col">
+        <div className="lg:col-span-4 bg-white rounded-3xl border border-green-200 p-6 flex flex-col min-h-0">
           <div className="flex items-center justify-between mb-6 px-2">
             <h3 className="font-bold flex items-center gap-2 text-gray-800">
               <Rocket className="w-4 h-4 text-green-600" /> Mentor Pool
@@ -167,22 +167,10 @@ export default function MatchingView() {
               );
             })}
           </div>
-
-          <button
-            onClick={runMatching}
-            disabled={isMatching || loading}
-            className="w-full mt-6 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-green-500/20 flex items-center justify-center gap-3"
-          >
-            {isMatching ? (
-              <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> Analyzing Ecosystem...</>
-            ) : (
-              <><BrainCircuit className="w-5 h-5" /> Perform AI Match</>
-            )}
-          </button>
         </div>
 
         {/* ── Match Results ── */}
-        <div className="lg:col-span-8 bg-white rounded-3xl border border-green-200 p-8 relative flex flex-col">
+        <div className="lg:col-span-8 bg-white rounded-3xl border border-green-200 p-8 relative flex flex-col min-h-0">
           <AnimatePresence mode="wait">
             {isMatching ? (
               <motion.div

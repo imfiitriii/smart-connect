@@ -59,7 +59,7 @@ export default function App() {
         </div>
 
         <div className="text-center space-y-1">
-          <h1 className="text-2xl font-black tracking-tight" style={{ color: '#111827' }}>ECOGRAPH</h1>
+          <h1 className="text-2xl font-black tracking-tight" style={{ color: '#111827' }}>SmartConnect</h1>
           <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: C.muted }}>
             Admin Command Center
           </p>
@@ -91,7 +91,7 @@ export default function App() {
             <BrainCircuit size={17} className="text-white" />
           </div>
           <div>
-            <span className="font-black text-[15px] tracking-tighter block leading-none" style={{ color: '#111827' }}>ECOGRAPH</span>
+            <span className="font-black text-[15px] tracking-tighter block leading-none" style={{ color: '#111827' }}>SmartConnect</span>
             <span className="text-[9px] font-bold uppercase tracking-[0.22em]" style={{ color: C.mutedLo }}>
               Ecosystem.OS
             </span>
