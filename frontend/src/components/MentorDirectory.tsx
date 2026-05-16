@@ -4,9 +4,7 @@ import {
   Search,
   Award,
   ShieldAlert,
-  Star,
   Zap,
-  ChevronRight,
 } from 'lucide-react';
 
 // ── API shape ─────────────────────────────────────────────────────────────────
@@ -44,15 +42,9 @@ export default function MentorDirectory() {
       });
   }, []);
 
-  const filtered = mentors.filter(m => {
-    const q = searchTerm.toLowerCase();
-    return (
-      m.name.toLowerCase().includes(q) ||
-      m.bio.toLowerCase().includes(q) ||
-      m.skills?.some(s => s.toLowerCase().includes(q)) ||
-      m.industries?.some(i => i.toLowerCase().includes(q))
-    );
-  });
+  const filtered = mentors.filter(m =>
+    m.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
@@ -71,7 +63,7 @@ export default function MentorDirectory() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within/search:text-green-600 transition-colors" />
           <input
             type="text"
-            placeholder="Search by name, skill, industry, or bio..."
+            placeholder="Search by mentor name..."
             className="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-12 pr-4 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 transition-all font-medium placeholder:text-gray-400 text-gray-700"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
@@ -102,9 +94,8 @@ export default function MentorDirectory() {
 
 // ── MentorCard ────────────────────────────────────────────────────────────────
 function MentorCard({ mentor }: { mentor: ApiMentor }) {
-  // derive a master score from experienceYears + capacity
-  const capacity = mentor.maxRelationships - (mentor.relationships?.length ?? 0);
-  const masterScore = Math.min(100, 55 + mentor.experienceYears * 2 + capacity * 2);
+  // derive a master score from experienceYears
+  const masterScore = Math.min(100, 55 + mentor.experienceYears * 2 + (mentor.relationships?.length ?? 0) * 2);
 
   // split skills into strengths (first half) and areas to grow (second half)
   const skills = mentor.skills ?? [];
@@ -134,19 +125,10 @@ function MentorCard({ mentor }: { mentor: ApiMentor }) {
             </p>
             <p className="text-xs text-gray-400 italic mb-6 leading-relaxed">"{mentor.bio}"</p>
 
-            <div className="w-full grid grid-cols-2 gap-3">
-              <div className="p-3 bg-white rounded-xl border border-green-100 flex flex-col items-center">
+            <div className="w-full flex justify-center">
+              <div className="p-3 bg-white rounded-xl border border-green-100 flex flex-col items-center w-full">
                 <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter mb-1">Experience</p>
                 <p className="text-sm font-black text-emerald-600 tabular-nums">{mentor.experienceYears} yrs</p>
-              </div>
-              <div className="p-3 bg-white rounded-xl border border-green-100 flex flex-col items-center">
-                <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter mb-1">Capacity</p>
-                <div className="flex items-center justify-center gap-1">
-                  <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
-                  <span className="text-sm font-black text-gray-700 tabular-nums">
-                    {capacity}/{mentor.maxRelationships}
-                  </span>
-                </div>
               </div>
             </div>
           </div>
@@ -214,9 +196,6 @@ function MentorCard({ mentor }: { mentor: ApiMentor }) {
           <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-3">
             {mentor.relationships?.length ?? 0} active
           </p>
-          <button className="mt-4 flex items-center gap-1.5 text-[10px] font-black text-green-600 hover:text-green-800 transition-colors uppercase tracking-widest bg-green-50 px-3 py-1.5 rounded-lg border border-green-200">
-            Verification <ChevronRight className="w-3 h-3" />
-          </button>
         </div>
 
       </div>
