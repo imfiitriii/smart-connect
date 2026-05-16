@@ -20,6 +20,8 @@ import {
   Cell,
 } from 'recharts';
 
+const API = import.meta.env.VITE_API_URL || '';
+
 // ── colour tokens ─────────────────────────────────────────────────────────────
 const C = {
   bg:     '#ffffff',
@@ -146,9 +148,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/relationships').then(r => { if (!r.ok) throw new Error(`Relationships: ${r.status}`); return r.json(); }),
-      fetch('/api/mentors').then(r => { if (!r.ok) throw new Error(`Mentors: ${r.status}`); return r.json(); }),
-      fetch('/api/startups').then(r => { if (!r.ok) throw new Error(`Startups: ${r.status}`); return r.json(); }),
+      fetch(`${API}/relationships`).then(r => { if (!r.ok) throw new Error(`Relationships: ${r.status}`); return r.json(); }),
+      fetch(`${API}/mentors`).then(r => { if (!r.ok) throw new Error(`Mentors: ${r.status}`); return r.json(); }),
+      fetch(`${API}/startups`).then(r => { if (!r.ok) throw new Error(`Startups: ${r.status}`); return r.json(); }),
     ])
       .then(([rels, mentors, startups]: [ApiRelationship[], ApiMentor[], ApiStartup[]]) => {
         setRelationships(rels);

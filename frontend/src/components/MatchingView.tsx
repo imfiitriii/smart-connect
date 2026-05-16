@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
+const API = import.meta.env.VITE_API_URL || '';
+
 // ── API shapes ────────────────────────────────────────────────────────────────
 interface ApiMentor {
   id: string;
@@ -67,9 +69,9 @@ export default function MatchingView() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/mentors').then(r => { if (!r.ok) throw new Error(`Mentors: ${r.status}`); return r.json(); }),
-      fetch('/api/relationships').then(r => { if (!r.ok) throw new Error(`Relationships: ${r.status}`); return r.json(); }),
-      fetch('/api/startups').then(r => { if (!r.ok) throw new Error(`Startups: ${r.status}`); return r.json(); }),
+      fetch(`${API}/mentors`).then(r => { if (!r.ok) throw new Error(`Mentors: ${r.status}`); return r.json(); }),
+      fetch(`${API}/relationships`).then(r => { if (!r.ok) throw new Error(`Relationships: ${r.status}`); return r.json(); }),
+      fetch(`${API}/startups`).then(r => { if (!r.ok) throw new Error(`Startups: ${r.status}`); return r.json(); }),
     ])
       .then(([mentorData, relData, sData]: [ApiMentor[], ApiRelationship[], ApiStartup[]]) => {
         setMentors(mentorData);

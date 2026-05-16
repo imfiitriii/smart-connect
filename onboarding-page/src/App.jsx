@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react'
 import './App.css'
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 const INDUSTRIES = [
   'Agriculture', 'AI / Machine Learning', 'Biotech & Health',
   'Climate & Sustainability', 'Cybersecurity', 'EdTech', 'E-commerce',
@@ -78,7 +80,7 @@ export default function App() {
         const formData = new FormData()
         formData.append('pdf', form.pitchDeck)
 
-        const extractRes = await fetch('http://localhost:3000/extract', {
+        const extractRes = await fetch(`${API}/extract`, {
           method: 'POST',
           body: formData,
         })
@@ -90,7 +92,7 @@ export default function App() {
         const { text } = await extractRes.json()
 
         // 2. Send text to LLM to get structured profile
-        const llmRes = await fetch('http://localhost:3000/llmextract', {
+        const llmRes = await fetch(`${API}/llmextract`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text }),
@@ -111,7 +113,7 @@ export default function App() {
       }
 
       // 3. Submit to /startups for matching
-      const res = await fetch('http://localhost:3000/startups', {
+      const res = await fetch(`${API}/startups`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(startupPayload),

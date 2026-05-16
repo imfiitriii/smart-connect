@@ -5,6 +5,9 @@ coverage/
 .DS_Store
 *.log
 backend/.env*
+frontend/.env*
+onboarding-page/.env*
+.env*
 frontend/.env.example*
 .env.example
 !.env

@@ -7,6 +7,8 @@ import {
   Zap,
 } from 'lucide-react';
 
+const API = import.meta.env.VITE_API_URL || '';
+
 // ── API shape ─────────────────────────────────────────────────────────────────
 interface ApiMentor {
   id: string;
@@ -27,7 +29,7 @@ export default function MentorDirectory() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    fetch('/api/mentors')
+    fetch(`${API}/mentors`)
       .then(res => {
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
         return res.json();
