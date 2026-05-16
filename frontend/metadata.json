@@ -1,0 +1,6 @@
+{
+  "name": "Innovation Ecosystem Platform",
+  "description": "An intelligent management system for matching startups with mentors, tracking outcomes, and optimizing ecosystem performance using explainable AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
