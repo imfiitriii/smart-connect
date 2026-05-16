@@ -3,10 +3,13 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   BrainCircuit,
   ChevronRight,
+  Building2,
+  CheckCircle2,
+  Clock,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-// ── API shape ─────────────────────────────────────────────────────────────────
+// ── API shapes ────────────────────────────────────────────────────────────────
 interface ApiMentor {
   id: string;
   name: string;
@@ -18,203 +21,310 @@ interface ApiMentor {
   relationships: string[];
 }
 
+interface ApiRelationship {
+  id: string;
+  mentorId: string;
+  startupId: string;
+  matchscore: number;
+  status: string;
+}
+
+interface ApiStartup {
+  id: string;
+  name: string;
+  industry?: string;
+  stage?: string;
+  description?: string;
+}
+
+interface MatchedStartup {
+  id: string;
+  name: string;
+  score: number;
+  status: string;
+  industry?: string;
+  stage?: string;
+  description?: string;
+}
+
 // ── helpers ───────────────────────────────────────────────────────────────────
 function scoreColor(score: number) {
-  if (score >= 90) return 'text-emerald-400';
-  if (score >= 75) return 'text-indigo-400';
-  return 'text-amber-400';
+  if (score >= 85) return '#16a34a';
+  if (score >= 60) return '#f59e0b';
+  return '#ef4444';
 }
 
 // ── MatchingView ──────────────────────────────────────────────────────────────
 export default function MatchingView() {
-  const [mentors, setMentors] = useState<ApiMentor[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [mentors, setMentors]               = useState<ApiMentor[]>([]);
+  const [relationships, setRelationships]   = useState<ApiRelationship[]>([]);
+  const [startupData, setStartupData]       = useState<ApiStartup[]>([]);
+  const [loading, setLoading]               = useState(true);
+  const [error, setError]                   = useState<string | null>(null);
   const [selectedMentor, setSelectedMentor] = useState<ApiMentor | null>(null);
-  const [isMatching, setIsMatching] = useState(false);
+  const [selectedStartup, setSelectedStartup] = useState<MatchedStartup | null>(null);
+  const [isMatching, setIsMatching]         = useState(false);
 
   useEffect(() => {
-    fetch('/api/mentors')
-      .then(res => {
-        if (!res.ok) throw new Error(`Server error: ${res.status}`);
-        return res.json();
-      })
-      .then((data: ApiMentor[]) => {
-        setMentors(data);
-        setSelectedMentor(data[0] ?? null);
+    Promise.all([
+      fetch('/api/mentors').then(r => { if (!r.ok) throw new Error(`Mentors: ${r.status}`); return r.json(); }),
+      fetch('/api/relationships').then(r => { if (!r.ok) throw new Error(`Relationships: ${r.status}`); return r.json(); }),
+      fetch('/api/startups').then(r => { if (!r.ok) throw new Error(`Startups: ${r.status}`); return r.json(); }),
+    ])
+      .then(([mentorData, relData, sData]: [ApiMentor[], ApiRelationship[], ApiStartup[]]) => {
+        setMentors(mentorData);
+        setSelectedMentor(mentorData[0] ?? null);
+        setRelationships(relData);
+        setStartupData(sData);
         setLoading(false);
       })
-      .catch(err => {
-        setError(err.message);
-        setLoading(false);
-      });
+      .catch(err => { setError(err.message); setLoading(false); });
   }, []);
+
+  // When mentor changes, reset selected startup
+  const handleSelectMentor = (m: ApiMentor) => {
+    setSelectedMentor(m);
+    setSelectedStartup(null);
+  };
 
   const runMatching = () => {
     setIsMatching(true);
     setTimeout(() => setIsMatching(false), 2000);
   };
 
-  // derive a pseudo match-score from experienceYears so cards have a number
-  function pseudoScore(m: ApiMentor) {
-    return Math.min(100, 60 + m.experienceYears * 2 + (m.maxRelationships - (m.relationships?.length ?? 0)) * 2);
+  // get matched startups for a given mentor (with full startup detail)
+  function getMatchedStartups(mentorId: string): MatchedStartup[] {
+    return relationships
+      .filter(r => r.mentorId === mentorId)
+      .map(r => {
+        const s = startupData.find(sd => sd.id === r.startupId);
+        return {
+          id: r.startupId,
+          name: s?.name ?? r.startupId,
+          score: r.matchscore,
+          status: r.status,
+          industry: s?.industry,
+          stage: s?.stage,
+          description: s?.description,
+        };
+      });
   }
+
+  // The score shown in the bubble: real AI score if a startup is selected, else '—'
+  const bubbleScore = selectedStartup ? selectedStartup.score : null;
 
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-280px)]">
 
         {/* ── Mentor Selector ── */}
-        <div className="lg:col-span-4 bg-slate-900 rounded-3xl border border-slate-800 p-6 flex flex-col">
+        <div className="lg:col-span-4 bg-white rounded-3xl border border-green-200 p-6 flex flex-col">
           <div className="flex items-center justify-between mb-6 px-2">
-            <h3 className="font-bold flex items-center gap-2">
-              <Rocket className="w-4 h-4 text-indigo-400" /> Mentor Pool
+            <h3 className="font-bold flex items-center gap-2 text-gray-800">
+              <Rocket className="w-4 h-4 text-green-600" /> Mentor Pool
             </h3>
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
               {mentors.length} Mentors
             </span>
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-            {loading && (
-              <p className="text-sm text-slate-500 text-center py-8">Loading mentors…</p>
-            )}
-            {error && (
-              <p className="text-sm text-amber-400 text-center py-8">Failed to load: {error}</p>
-            )}
-            {!loading && !error && mentors.map(m => (
-              <button
-                key={m.id}
-                onClick={() => setSelectedMentor(m)}
-                className={cn(
-                  'w-full p-4 rounded-2xl border transition-all text-left group',
-                  selectedMentor?.id === m.id
-                    ? 'bg-indigo-600/10 border-indigo-500/50'
-                    : 'bg-slate-950/50 border-slate-800 hover:border-slate-700'
-                )}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className={cn(
-                    'text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded',
+            {loading && <p className="text-sm text-gray-400 text-center py-8">Loading mentors…</p>}
+            {error   && <p className="text-sm text-amber-500 text-center py-8">Failed to load: {error}</p>}
+            {!loading && !error && mentors.map(m => {
+              const matched = getMatchedStartups(m.id);
+              return (
+                <button
+                  key={m.id}
+                  onClick={() => handleSelectMentor(m)}
+                  className={cn(
+                    'w-full p-4 rounded-2xl border transition-all text-left group',
                     selectedMentor?.id === m.id
-                      ? 'bg-indigo-500/20 text-indigo-400'
-                      : 'bg-slate-800 text-slate-500'
-                  )}>
-                    {m.industries?.[0] ?? 'General'}
-                  </span>
-                  {selectedMentor?.id === m.id && <ChevronRight className="w-4 h-4 text-indigo-400" />}
-                </div>
-                <h4 className="font-bold text-slate-100">{m.name}</h4>
-                <p className="text-xs text-slate-500 mt-1">{m.experienceYears} yrs exp</p>
-              </button>
-            ))}
+                      ? 'bg-green-50 border-green-400/60'
+                      : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                  )}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={cn(
+                      'text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded',
+                      selectedMentor?.id === m.id ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'
+                    )}>
+                      {m.industries?.[0] ?? 'General'}
+                    </span>
+                    {selectedMentor?.id === m.id && <ChevronRight className="w-4 h-4 text-green-600" />}
+                  </div>
+                  <h4 className="font-bold text-gray-800">{m.name}</h4>
+                  <p className="text-xs text-gray-400 mt-1">{m.experienceYears} yrs exp</p>
+                  {matched.length > 0 && (
+                    <div className="mt-2 flex items-center gap-1.5">
+                      <Building2 className="w-3 h-3 text-green-500" />
+                      <span className="text-[10px] font-bold text-green-600">
+                        {matched.length} startup{matched.length > 1 ? 's' : ''} matched
+                      </span>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           <button
             onClick={runMatching}
             disabled={isMatching || loading}
-            className="w-full mt-6 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-3"
+            className="w-full mt-6 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-green-500/20 flex items-center justify-center gap-3"
           >
             {isMatching ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                Analyzing Ecosystem...
-              </>
+              <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> Analyzing Ecosystem...</>
             ) : (
-              <>
-                <BrainCircuit className="w-5 h-5" />
-                Perform AI Match
-              </>
+              <><BrainCircuit className="w-5 h-5" /> Perform AI Match</>
             )}
           </button>
         </div>
 
         {/* ── Match Results ── */}
-        <div className="lg:col-span-8 bg-slate-900 rounded-3xl border border-slate-800 p-8 relative flex flex-col">
+        <div className="lg:col-span-8 bg-white rounded-3xl border border-green-200 p-8 relative flex flex-col">
           <AnimatePresence mode="wait">
             {isMatching ? (
               <motion.div
                 key="matching"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="flex-1 flex flex-col items-center justify-center text-center space-y-6"
               >
                 <div className="relative">
-                  <div className="w-24 h-24 bg-indigo-500/10 rounded-full flex items-center justify-center animate-pulse">
-                    <BrainCircuit className="w-12 h-12 text-indigo-400" />
+                  <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center animate-pulse">
+                    <BrainCircuit className="w-12 h-12 text-green-600" />
                   </div>
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ repeat: Infinity, duration: 8, ease: 'linear' }}
-                    className="absolute inset-[-20px] border border-dashed border-indigo-500/30 rounded-full"
+                    className="absolute inset-[-20px] border border-dashed border-green-400/40 rounded-full"
                   />
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                  <h4 className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent">
                     AI Reasoner Computing...
                   </h4>
-                  <p className="text-slate-500 text-sm mt-2">
-                    Checking cross-industry compatibility and success history
-                  </p>
+                  <p className="text-gray-400 text-sm mt-2">Checking cross-industry compatibility and success history</p>
                 </div>
               </motion.div>
+
             ) : selectedMentor ? (
               <motion.div
-                key="results"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                key={selectedMentor.id}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="flex-1 flex flex-col h-full overflow-hidden"
               >
-                {/* Visualizer */}
-                <div className="h-48 border-b border-slate-800/50 mb-6 relative flex items-center justify-center overflow-hidden shrink-0">
-                  <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-1/2 left-0 w-full h-[1px] bg-indigo-500" />
-                    <div className="absolute top-0 left-1/2 w-[1px] h-full bg-indigo-500" />
-                  </div>
-                  <div className="flex-1 flex items-center justify-center relative w-full scale-75 lg:scale-90">
-                    <div className="absolute w-1/2 h-[2px] bg-gradient-to-r from-indigo-500 via-emerald-500 to-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)]" />
+                {/* ── Visualizer ── */}
+                <div className="border-b border-green-100 mb-6 pb-5 shrink-0">
+                  <div className="h-48 w-full relative flex items-center justify-center">
+                    <div className="absolute inset-0 opacity-10">
+                      <div className="absolute top-1/2 left-0 w-full h-[1px] bg-green-500" />
+                      <div className="absolute top-0 left-1/2 w-[1px] h-full bg-green-500" />
+                    </div>
+                    <div className="flex-1 flex items-center justify-center relative w-full scale-75 lg:scale-90">
+                      <div className="absolute w-1/2 h-[2px] bg-gradient-to-r from-green-500 via-emerald-500 to-green-500 shadow-[0_0_15px_rgba(22,163,74,0.4)]" />
 
-                    {/* Industry node */}
-                    <div className="z-20 flex flex-col items-center gap-2 absolute left-10 lg:left-20">
-                      <div className="w-16 h-16 rounded-full bg-slate-950 border-2 border-indigo-500 flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.3)]">
-                        <span className="text-[9px] font-black uppercase text-white text-center px-1 leading-tight">
-                          {selectedMentor.industries?.[0] ?? 'General'}
-                        </span>
+                      {/* Mentor node (left) */}
+                      <div className="z-20 flex flex-col items-center gap-2 absolute left-10 lg:left-20">
+                        <div className="w-16 h-16 rounded-full bg-white border-2 border-green-500 flex items-center justify-center shadow-[0_0_20px_rgba(22,163,74,0.2)] text-xl font-black text-green-600">
+                          {selectedMentor.name[0]}
+                        </div>
+                        <span className="text-[9px] uppercase font-black tracking-widest text-gray-400">Mentor</span>
                       </div>
-                      <span className="text-[9px] uppercase font-black tracking-widest text-slate-500">Industry</span>
-                    </div>
 
-                    {/* Score bubble */}
-                    <div className="z-30 w-24 h-24 rounded-full bg-slate-900 border-4 border-slate-800 flex flex-col items-center justify-center shadow-2xl">
-                      <span className="text-3xl font-black text-white">{pseudoScore(selectedMentor)}</span>
-                      <span className="text-[9px] uppercase font-black text-emerald-400 tracking-tighter">Score</span>
-                    </div>
+                      {/* Score bubble (center) — shows real AI score when a startup is selected */}
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={bubbleScore ?? 'empty'}
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0.8, opacity: 0 }}
+                          transition={{ duration: 0.25 }}
+                          className="z-30 w-24 h-24 rounded-full bg-white border-4 border-green-200 flex flex-col items-center justify-center shadow-2xl"
+                        >
+                          {bubbleScore !== null ? (
+                            <>
+                              <span className="text-3xl font-black tabular-nums" style={{ color: scoreColor(bubbleScore) }}>
+                                {bubbleScore}
+                              </span>
+                              <span className="text-[9px] uppercase font-black text-emerald-600 tracking-tighter">%</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-lg font-black text-gray-300">—</span>
+                              <span className="text-[9px] uppercase font-black text-gray-300 tracking-tighter">Score</span>
+                            </>
+                          )}
+                        </motion.div>
+                      </AnimatePresence>
 
-                    {/* Mentor node */}
-                    <div className="z-20 flex flex-col items-center gap-2 absolute right-10 lg:right-20">
-                      <div className="w-16 h-16 rounded-full bg-slate-950 border-2 border-emerald-500 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.3)] text-xl font-black text-emerald-400">
-                        {selectedMentor.name[0]}
-                      </div>
-                      <span className="text-[9px] uppercase font-black tracking-widest text-slate-500">Mentor</span>
+                      {/* Startup node (right) */}
+                      {(() => {
+                        const matched = getMatchedStartups(selectedMentor.id);
+                        const active = selectedStartup ?? matched[0] ?? null;
+                        return (
+                          <div className="z-20 flex flex-col items-center gap-2 absolute right-10 lg:right-20">
+                            <div
+                              className="w-16 h-16 rounded-full bg-white border-2 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.2)]"
+                              style={{ borderColor: active ? (active.status === 'found' ? '#16a34a' : '#f59e0b') : '#d1d5db' }}
+                            >
+                              {active ? (
+                                <span className="text-[9px] font-black uppercase text-gray-700 text-center px-1 leading-tight">
+                                  {active.name}
+                                </span>
+                              ) : (
+                                <Building2 className="w-5 h-5 text-gray-300" />
+                              )}
+                            </div>
+                            <span className="text-[9px] uppercase font-black tracking-widest text-gray-400">
+                              {active ? 'Startup' : 'No Match'}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
+
+                  {/* hint */}
+                  {!selectedStartup && getMatchedStartups(selectedMentor.id).length > 0 && (
+                    <p className="text-center text-[11px] text-gray-400 mt-1">
+                      Click a startup below to see its match score
+                    </p>
+                  )}
                 </div>
 
-                {/* Mentor cards list */}
-                <div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
-                  {mentors.map((m, i) => (
-                    <MatchCard
-                      key={m.id}
-                      mentor={m}
-                      score={pseudoScore(m)}
-                      index={i}
-                    />
-                  ))}
+                {/* ── Matched startup cards list ── */}
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                  {(() => {
+                    const matched = getMatchedStartups(selectedMentor.id);
+                    if (matched.length === 0) {
+                      return (
+                        <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                          <Building2 className="w-10 h-10 text-gray-200 mb-3" />
+                          <p className="text-sm font-bold text-gray-400">No startups matched yet</p>
+                          <p className="text-xs text-gray-300 mt-1">Run AI Match to find compatible startups</p>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="space-y-3">
+                        {matched.map((s, i) => (
+                          <StartupMatchCard
+                            key={s.id}
+                            startup={s}
+                            index={i}
+                            isSelected={selectedStartup?.id === s.id}
+                            onSelect={() => setSelectedStartup(prev => prev?.id === s.id ? null : s)}
+                          />
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
               </motion.div>
+
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-slate-500 italic text-sm">
+              <div className="flex-1 flex flex-col items-center justify-center text-gray-400 italic text-sm">
                 {loading ? 'Loading mentors…' : 'No mentors available.'}
               </div>
             )}
@@ -225,75 +335,118 @@ export default function MatchingView() {
   );
 }
 
-// ── MatchCard ─────────────────────────────────────────────────────────────────
-function MatchCard({ mentor, score, index }: { mentor: ApiMentor; score: number; index: number }) {
+// ── StartupMatchCard ──────────────────────────────────────────────────────────
+function StartupMatchCard({
+  startup,
+  index,
+  isSelected,
+  onSelect,
+}: {
+  startup: MatchedStartup;
+  index: number;
+  isSelected: boolean;
+  onSelect: () => void;
+}) {
+  const isFound = startup.status === 'found';
+  const accentColor = isFound ? '#16a34a' : '#f59e0b';
+
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 10 }}
-      animate={{ opacity: 1, x: 0 }}
+    <motion.button
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.06 }}
-      className="p-5 bg-slate-950/40 border border-slate-800/80 rounded-2xl hover:border-indigo-500/30 transition-all group relative overflow-hidden"
+      onClick={onSelect}
+      className="w-full text-left"
     >
-      <div className="flex items-start gap-5 relative z-10">
-        {/* Score box */}
-        <div className="w-16 h-20 flex flex-col items-center justify-center bg-slate-900/80 rounded-xl border border-slate-800 group-hover:border-indigo-500/50 transition-colors shrink-0 shadow-inner">
-          <span className="text-[9px] font-black text-slate-500 uppercase tracking-tighter">Score</span>
-          <span className={cn('text-xl font-black tabular-nums', scoreColor(score))}>
-            {score}
-          </span>
-        </div>
+      <div
+        className="p-5 rounded-2xl border-2 transition-all duration-200"
+        style={{
+          background: isSelected ? (isFound ? 'rgba(22,163,74,0.06)' : 'rgba(245,158,11,0.06)') : '#f9fafb',
+          borderColor: isSelected ? accentColor : '#e5e7eb',
+        }}
+      >
+        <div className="flex items-center gap-4">
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-1.5">
-            <h4 className="text-sm font-black group-hover:text-indigo-400 transition-colors uppercase tracking-tight truncate">
-              {mentor.name}
-            </h4>
-            <span className="text-[9px] font-bold text-slate-500 uppercase font-mono tracking-widest shrink-0 ml-2">
-              {mentor.industries?.[0] ?? '—'}
-            </span>
-          </div>
-
-          {/* Bio */}
-          <div className="p-3 bg-slate-900 rounded-xl border border-slate-800/50 mb-3">
-            <p className="text-[11px] text-slate-400 leading-relaxed italic">
-              <span className="text-indigo-400 font-black not-italic mr-1.5 uppercase text-[9px] tracking-widest">Bio:</span>
-              "{mentor.bio}"
-            </p>
-          </div>
-
-          {/* Skills */}
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            {mentor.skills?.map(s => (
-              <span key={s} className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-800 text-slate-400">
-                {s}
-              </span>
-            ))}
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex gap-4">
-              {score >= 80 ? (
-                <span className="flex items-center gap-1.5 text-[9px] font-black text-emerald-400 uppercase tracking-widest">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Auto-Assign
-                </span>
+          {/* Score — hidden until selected, shows placeholder ring when not */}
+          <div
+            className="w-16 h-16 rounded-xl flex flex-col items-center justify-center shrink-0 border-2 transition-all duration-300"
+            style={{
+              borderColor: isSelected ? accentColor : '#e5e7eb',
+              background: isSelected ? `${accentColor}12` : '#fff',
+            }}
+          >
+            <AnimatePresence mode="wait">
+              {isSelected ? (
+                <motion.div
+                  key="score"
+                  initial={{ opacity: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.7 }}
+                  className="flex flex-col items-center"
+                >
+                  <span className="text-xl font-black tabular-nums leading-none" style={{ color: accentColor }}>
+                    {startup.score}
+                  </span>
+                  <span className="text-[9px] font-black uppercase tracking-tighter" style={{ color: accentColor }}>
+                    %
+                  </span>
+                </motion.div>
               ) : (
-                <span className="flex items-center gap-1.5 text-[9px] font-black text-amber-400 uppercase tracking-widest">
-                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Hold Admin
-                </span>
+                <motion.div
+                  key="hidden"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col items-center gap-1"
+                >
+                  <Building2 className="w-5 h-5 text-gray-300" />
+                  <span className="text-[8px] font-black uppercase tracking-tighter text-gray-300">Click</span>
+                </motion.div>
               )}
+            </AnimatePresence>
+          </div>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1">
+              <h4 className="text-sm font-black uppercase tracking-tight text-gray-800 truncate">
+                {startup.name}
+              </h4>
+              {/* Status badge */}
+              <span
+                className="ml-2 shrink-0 flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border"
+                style={{
+                  background: isFound ? 'rgba(22,163,74,0.08)' : 'rgba(245,158,11,0.08)',
+                  borderColor: isFound ? 'rgba(22,163,74,0.3)' : 'rgba(245,158,11,0.3)',
+                  color: accentColor,
+                }}
+              >
+                {isFound ? <CheckCircle2 className="w-2.5 h-2.5" /> : <Clock className="w-2.5 h-2.5" />}
+                {isFound ? 'Matched' : 'On Hold'}
+              </span>
             </div>
-            <div className="flex gap-2">
-              <button className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black rounded-lg transition-all shadow-lg shadow-indigo-600/10 uppercase tracking-widest">
-                Accept Match
-              </button>
-              <button className="p-1.5 border border-slate-800 hover:border-slate-700 text-slate-500 hover:text-white rounded-lg transition-colors">
-                <ChevronRight className="w-3 h-3" />
-              </button>
-            </div>
+
+            {startup.industry && (
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+                {startup.industry}
+              </p>
+            )}
+
+            {startup.description && (
+              <p className="text-[11px] text-gray-500 leading-relaxed line-clamp-2">
+                {startup.description}
+              </p>
+            )}
+
+            {!isSelected && (
+              <p className="text-[10px] text-gray-400 mt-1.5 flex items-center gap-1">
+                <ChevronRight className="w-3 h-3" /> Click to reveal match score
+              </p>
+            )}
           </div>
         </div>
       </div>
-    </motion.div>
+    </motion.button>
   );
 }
 

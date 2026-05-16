@@ -22,15 +22,15 @@ import {
 
 // ── colour tokens ─────────────────────────────────────────────────────────────
 const C = {
-  bg:     '#050505',
-  card:   '#111111',
-  border: '#1e1e1e',
-  hover:  '#1a1a1a',
-  green:  '#deff9a',
+  bg:     '#ffffff',
+  card:   '#f0f7f0',
+  border: '#d4e8d4',
+  hover:  '#e8f5e8',
+  green:  '#16a34a',
   blue:   '#3b82f6',
   yellow: '#facc15',
-  muted:  '#555',
-  lo:     '#333',
+  muted:  '#6b7280',
+  lo:     '#9ca3af',
 };
 
 // ── data ──────────────────────────────────────────────────────────────────────
@@ -81,7 +81,7 @@ const startupData = [
 function barFill(rate: number) {
   if (rate >= 70) return C.green;
   if (rate >= 55) return C.blue;
-  return '#2a2a2a';
+  return '#d1d5db';
 }
 
 // ── sub-components ────────────────────────────────────────────────────────────
@@ -112,12 +112,11 @@ function Card({
     </div>
   );
 }
-
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-xl px-4 py-3 text-sm font-bold border"
-         style={{ background: '#161616', borderColor: '#2a2a2a', color: '#fff' }}>
+         style={{ background: '#f0f7f0', borderColor: '#d4e8d4', color: '#111827' }}>
       <p className="text-[10px] uppercase tracking-widest mb-1" style={{ color: C.muted }}>{label}</p>
       <p style={{ color: C.green }}>{payload[0].value}% success rate</p>
     </div>
@@ -229,8 +228,8 @@ export default function Dashboard() {
                      style={{ color: C.muted }}>
                     {m.label}
                   </p>
-                  <p className="text-4xl font-black tabular-nums text-white leading-none"
-                     style={{ letterSpacing: '-0.03em' }}>
+                  <p className="text-4xl font-black tabular-nums leading-none"
+                     style={{ color: '#111827', letterSpacing: '-0.03em' }}>
                     {m.value}
                   </p>
                 </div>
@@ -260,10 +259,10 @@ export default function Dashboard() {
                    style={{ color: C.muted }}>
                   Daily Pairings
                 </p>
-                <h3 className="text-base font-black text-white mt-0.5">Total Relationship</h3>
+                <h3 className="text-base font-black mt-0.5" style={{ color: '#111827' }}>Total Relationship</h3>
               </div>
               <span className="text-[10px] font-black px-2.5 py-1 rounded-full"
-                    style={{ background: 'rgba(222,255,154,0.08)', color: C.green, border: `1px solid ${C.green}22` }}>
+                    style={{ background: 'rgba(22,163,74,0.10)', color: C.green, border: `1px solid ${C.green}22` }}>
                 {relationships.length} Active
               </span>
             </div>
@@ -291,7 +290,7 @@ export default function Dashboard() {
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: 0.22 + i * 0.07 }}
                               className="rounded-xl p-4 border transition-all duration-200 group"
-                              style={{ background: '#0d0d0d', borderColor: C.border }}
+                              style={{ background: '#f8faf8', borderColor: C.border }}
                               onMouseEnter={e => (e.currentTarget.style.borderColor = cfg.color + '44')}
                               onMouseLeave={e => (e.currentTarget.style.borderColor = C.border)}>
 
@@ -309,14 +308,14 @@ export default function Dashboard() {
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-bold uppercase tracking-widest w-20 shrink-0"
                               style={{ color: C.muted }}>Mentor</span>
-                        <span className="text-sm font-black text-white truncate">
+                        <span className="text-sm font-black truncate" style={{ color: '#111827' }}>
                           {mentorMap[r.mentorId] ?? r.mentorId}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-bold uppercase tracking-widest w-20 shrink-0"
                               style={{ color: C.muted }}>Startup</span>
-                        <span className="text-sm font-bold truncate" style={{ color: '#aaa' }}>
+                        <span className="text-sm font-bold truncate" style={{ color: '#374151' }}>
                           {startupMap[r.startupId] ?? r.startupId}
                         </span>
                       </div>
@@ -357,7 +356,7 @@ export default function Dashboard() {
                    style={{ color: C.muted }}>
                   Startup Performance
                 </p>
-                <h3 className="text-base font-black text-white mt-0.5">Success Rate (%)</h3>
+                <h3 className="text-base font-black mt-0.5" style={{ color: '#111827' }}>Success Rate (%)</h3>
               </div>
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest"
                    style={{ background: 'rgba(59,130,246,0.08)', color: C.blue, borderColor: `${C.blue}30` }}>
@@ -370,16 +369,16 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={startupData} barCategoryGap="38%"
                           margin={{ top: 4, right: 4, left: -22, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#181818" vertical={false} />
-                  <XAxis dataKey="startup" stroke="#222"
-                         tick={{ fill: '#666', fontSize: 12, fontWeight: 700 }}
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                  <XAxis dataKey="startup" stroke="#e5e7eb"
+                         tick={{ fill: '#6b7280', fontSize: 12, fontWeight: 700 }}
                          tickLine={false} axisLine={false} />
-                  <YAxis domain={[0, 100]} stroke="#222"
-                         tick={{ fill: '#444', fontSize: 11 }}
+                  <YAxis domain={[0, 100]} stroke="#e5e7eb"
+                         tick={{ fill: '#9ca3af', fontSize: 11 }}
                          tickLine={false} axisLine={false}
                          tickFormatter={v => `${v}%`} />
                   <Tooltip content={<CustomTooltip />}
-                           cursor={{ fill: 'rgba(255,255,255,0.025)' }} />
+                           cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
                   <Bar dataKey="rate" radius={[8, 8, 0, 0]}>
                     {startupData.map((d, i) => (
                       <Cell key={i} fill={barFill(d.rate)} />
@@ -395,7 +394,7 @@ export default function Dashboard() {
               {[
                 { color: C.green,  label: 'High ≥70%' },
                 { color: C.blue,   label: 'Mid 55–69%' },
-                { color: '#2a2a2a', label: 'Low <55%' },
+                { color: '#e5e7eb', label: 'Low <55%' },
               ].map(l => (
                 <div key={l.label} className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full border"
@@ -410,7 +409,7 @@ export default function Dashboard() {
           <Card className="p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                   style={{ background: 'rgba(222,255,154,0.10)', border: `1px solid ${C.green}25` }}>
+                   style={{ background: 'rgba(22,163,74,0.10)', border: `1px solid ${C.green}25` }}>
                 <Sparkles size={15} style={{ color: C.green }} />
               </div>
               <div>
@@ -418,12 +417,12 @@ export default function Dashboard() {
                    style={{ color: C.muted }}>
                   Powered by AI Reasoner
                 </p>
-                <h4 className="text-sm font-black text-white leading-none mt-0.5">AI Summary</h4>
+                <h4 className="text-sm font-black leading-none mt-0.5" style={{ color: '#111827' }}>AI Summary</h4>
               </div>
             </div>
 
             <div className="rounded-xl px-5 py-4 border-l-2 text-sm leading-relaxed font-medium"
-                 style={{ background: 'rgba(222,255,154,0.04)', borderLeftColor: C.green, color: '#888' }}>
+                 style={{ background: 'rgba(22,163,74,0.06)', borderLeftColor: C.green, color: '#374151' }}>
               <span style={{ color: C.green }} className="font-black">Toy G7</span> shows excellent success
               rate with score of{' '}
               <span style={{ color: C.green }} className="font-black">89%</span>. This indicates{' '}
@@ -439,7 +438,7 @@ export default function Dashboard() {
                 <span style={{ color: C.green }}>92%</span>
               </div>
               <div className="h-1.5 w-full rounded-full overflow-hidden"
-                   style={{ background: '#1a1a1a' }}>
+                   style={{ background: '#e5e7eb' }}>
                 <motion.div className="h-full rounded-full"
                              initial={{ width: 0 }}
                              animate={{ width: '92%' }}
