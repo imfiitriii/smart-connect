@@ -2,7 +2,7 @@ const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
 
 async function llm(key, prompt) {
     const googleLlm = new ChatGoogleGenerativeAI({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3-pro-preview",
         apiKey: key,
     });
 
